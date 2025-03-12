@@ -1,6 +1,6 @@
 from torchvision import datasets, transforms
 import torch
-
+import time
 
 
 
@@ -39,10 +39,11 @@ def main():
         torch.nn.Linear(128, 10)
         )
     
-    criterion = torch.nn.MSELoss()
+    criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
 
     for epoch in range(10):
+        start_time = time.time()
         total_loss = 0
         for images, labels in train_loader:
             optimizer.zero_grad()
@@ -51,8 +52,7 @@ def main():
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        
-        print(f"Epoch {epoch + 1}, Loss: {total_loss}")
+        print(f"Epoch {epoch + 1}, Loss: {total_loss}, Time: {time.time() - start_time}")
 
 if __name__ == "__main__":
     main()
