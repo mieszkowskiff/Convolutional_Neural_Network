@@ -10,5 +10,5 @@ The dataset contains $10$ classes (airplane, automobile, bird, cat, deer, dog, f
 ## Setup
 
 ```{Bash}
-pip install numpy, matplotlib, torch
+pip install numpy matplotlib torch
 ```
