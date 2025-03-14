@@ -2,6 +2,43 @@ from torchvision import datasets, transforms
 import torch
 import time
 
+class Block(torch.nn.Module):
+    def __init__(self):
+        super(Block, self).__init__()
+        self.convolutions = torch.nn.ModuleList([
+            torch.nn.Sequential(
+                torch.nn.Conv2d(32, 32, kernel_size = 3, stride = 1, padding = 1),
+                torch.nn.ReLU(),
+                torch.nn.Conv2d(32, 32, kernel_size = 3, stride = 1, padding = 1),
+                torch.nn.ReLU(),
+                torch.nn.Conv2d(32, 16, kernel_size = 3, stride = 1, padding = 1)
+            ),
+            torch.nn.Sequential(
+                torch.nn.Conv2d(32, 16, kernel_size = 3, stride = 1, padding = 1)
+            )
+        ])
+    
+    def forward(self, x):
+        y = torch.cat([conv(x) for conv in self.convolutions], dim = 1)
+        y = torch.nn.functional.relu(x)
+        return y + x
+
+class Network(torch.nn.Module):
+    def __init__(self, blocks_number):
+        super(Network, self).__init__()
+        self.init_conv = torch.nn.Conv2d(3, 32, kernel_size = 3, stride = 1, padding = 1)
+        self.blocks = torch.nn.Sequential(*[Block() for _ in range(blocks_number)])
+        self.linear = torch.nn.Linear(32 * 32 * 32, 10)
+
+    def forward(self, x):
+        x = self.init_conv(x)
+        x = torch.nn.functional.relu(x)
+        x = self.blocks(x)
+        x = torch.nn.Flatten()(x)
+        x = self.linear(x)
+        return x
+    
+
 
 
 def main():
@@ -19,29 +56,9 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 128, shuffle = False, pin_memory=True, num_workers=4)
     test_dataset_size = len(test_dataset)
 
-    model = torch.nn.Sequential(
-        torch.nn.Conv2d(
-            in_channels = 3, 
-            out_channels = 16, 
-            kernel_size = 3, 
-            stride = 1, 
-            padding = 1
-        ),
-        torch.nn.ReLU(),
-        torch.nn.Conv2d(
-            in_channels = 16, 
-            out_channels = 32, 
-            kernel_size = 3, 
-            stride = 1, 
-            padding = 1
-        ),
-        torch.nn.ReLU(),
-        torch.nn.MaxPool2d(kernel_size = 2),
-        torch.nn.Flatten(),
-        torch.nn.Linear(32 * 16 * 16, 128),
-        torch.nn.ReLU(),
-        torch.nn.Linear(128, 10)
-        )
+
+
+    model = Network(5)
 
     model.to(device)
 
