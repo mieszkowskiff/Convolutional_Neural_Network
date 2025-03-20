@@ -13,16 +13,19 @@ class Block(torch.nn.Module):
             )
         ])
     
-    def forward(self, x):
+    def forward(self, x, bypass = True):
         y = torch.cat([conv(x) for conv in self.convolutions], dim = 1)
-        x = torch.nn.functional.relu(x + y)
+        if bypass:
+            x = torch.nn.functional.relu(x + y)
+        else:
+            x = torch.nn.functional.relu(y)
         return x
 
 class Head(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, in_out_channels = 32):
         super(Head, self).__init__()
         self.head = torch.nn.Sequential(
-            torch.nn.Linear(32 * 32 * 32, 256),
+            torch.nn.Linear(in_out_channels * 32 * 32, 256),
             torch.nn.ReLU(),
             torch.nn.Dropout(0.5),
             torch.nn.Linear(256, 10)
@@ -37,7 +40,7 @@ class Head(torch.nn.Module):
 class Network(torch.nn.Module):
     def __init__(self, blocks_number, in_out_channels = 32, internal_channels = 32):
         super(Network, self).__init__()
-        self.init_conv = torch.nn.Conv2d(3, 32, kernel_size = 3, stride = 1, padding = 1)
+        self.init_conv = torch.nn.Conv2d(3, in_out_channels, kernel_size = 3, stride = 1, padding = 1)
         self.blocks = torch.nn.Sequential(
             *[
                 Block(
@@ -46,7 +49,7 @@ class Network(torch.nn.Module):
                 ) for _ in range(blocks_number)
             ]
         )
-        self.head = Head()
+        self.head = Head(in_out_channels = in_out_channels)
 
     def forward(self, x):
         x = self.init_conv(x)
@@ -63,14 +66,28 @@ def main():
     print(f"Using device: {device}")
 
     train_transform = transforms.Compose([
-        transforms.ToTensor()
+        transforms.ToTensor(),
     ])
 
     test_transform = transforms.ToTensor()
 
+    train_dataset_usage = 0.1
 
     train_dataset = datasets.ImageFolder(root = "./data/train", transform = train_transform)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = 32, shuffle = True, pin_memory=True, num_workers=4)
+
+
+    dataset_size = len(train_dataset)
+    subset_size = int(dataset_size * train_dataset_usage)
+    random_indices = torch.randperm(dataset_size)[:subset_size]
+    train_subset = torch.utils.data.Subset(train_dataset, random_indices)
+
+    train_loader = torch.utils.data.DataLoader(
+        train_subset, 
+        batch_size = 32, 
+        shuffle = True, 
+        pin_memory = True, 
+        num_workers = 4
+        )
 
     test_dataset = datasets.ImageFolder(root = "./data/test", transform = test_transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 128, shuffle = False, pin_memory=True, num_workers=4)
@@ -79,8 +96,8 @@ def main():
 
 
     model = Network(
-        blocks_number = 10,
-        in_out_channels = 32,
+        blocks_number = 5,
+        in_out_channels = 128,
         internal_channels = 64
         )
 
