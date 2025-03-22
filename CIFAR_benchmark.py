@@ -43,17 +43,47 @@ def preload_dataset(dataset, batch_size=512, num_workers=4, device='cpu'):
 
     return images_tensor.to(device), labels_tensor.to(device)
 
+class Conv_Block(torch.nn.Module):
+    def __init__(self, in_out_channels = 8, internal_channels = 8, kernel_size = 3, stride = 1, padding = 1): 
+        super(Conv_Block, self).__init__()
+        self.convolutions = torch.nn.Sequential(
+            torch.nn.Conv2d(in_out_channels, internal_channels, kernel_size, stride, padding),
+            torch.nn.ReLU()
+        )
+    
+    def forward(self, x):
+        return self.convolutions(x)
+    
+class Res_Conv_Block(torch.nn.Module):
+    def __init__(self, in_out_channels = 8, internal_channels = 8, kernel_size = 3, stride = 1, padding = 1): 
+        super(Res_Conv_Block, self).__init__()
+        self.convolutions = torch.nn.Sequential(
+            torch.nn.Conv2d(in_out_channels, internal_channels, kernel_size, stride, padding)
+        )
+    
+    def forward(self, x):
+        y = self.convolutions(x)
+        x = torch.nn.functional.relu(x + y)
+        return x
+
+class Pool_Block(torch.nn.Module):
+    def __init__(self, kernel_size = 2, stride = 2): 
+        super(Pool_Block, self).__init__()
+        self.pool = nn.MaxPool2d(kernel_size, stride)
+    
+    def forward(self, x):
+        return self.pool(x)
+
 # Model Head
 class Head(nn.Module):
     def __init__(self):
         super().__init__()
         self.head = nn.Sequential(
-            nn.Linear(64 * 8 * 8, 512),
+            nn.Linear(128 * 8 * 8, 512),
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
-            nn.Linear(128, 10)
-            
+            nn.Linear(128, 10)   
         )
 
     def forward(self, x):
@@ -62,24 +92,28 @@ class Head(nn.Module):
 
 # Full Network
 class Network(nn.Module):
-    def __init__(self, in_out_channels=64, internal_channels=64):
+    def __init__(self, in_out_channels=32, internal_channels=64):
         super().__init__()
         self.init_conv = nn.Conv2d(3, internal_channels, kernel_size=3, padding=1)
-        self.conv = nn.Conv2d(internal_channels, in_out_channels, kernel_size=3, padding=1)
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.blocks1 = torch.nn.Sequential(
+            *[
+                Res_Conv_Block(in_out_channels=64, internal_channels=64) for _ in range(5)
+            ],
+            Pool_Block(kernel_size = 2, stride = 2)
+        )
+        self.blocks2 = torch.nn.Sequential(
+            Conv_Block(in_out_channels=64, internal_channels=128),
+            *[
+                Conv_Block(in_out_channels=128, internal_channels=128) for _ in range(6)
+            ],
+            Pool_Block(kernel_size = 2, stride = 2)
+        )
         self.head = Head()
 
     def forward(self, x):
         x = F.relu(self.init_conv(x))
-        x = F.relu(self.conv(x))
-        x = F.relu(self.conv(x))
-        x = F.relu(self.conv(x))
-        x = self.pool(x)
-        x = F.relu(self.conv(x))
-        x = F.relu(self.conv(x))
-        x = F.relu(self.conv(x))
-        x = F.relu(self.conv(x))
-        x = self.pool(x)
+        x = self.blocks1(x)
+        x = self.blocks2(x)
         return self.head(x)
 
 def main():
@@ -131,15 +165,15 @@ def main():
 
     model = Network().to(device)
     criterion = nn.CrossEntropyLoss()
-    #optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
     batch_size = 128
     print(f'Model created and moved to {device}.')
 
     print("Training Loop started...")
     # Training Loop
-    for epoch in range(10):
+    for epoch in range(30):
         model.train()
         start_time = time.time()
         total_loss = 0
