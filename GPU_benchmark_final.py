@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.datasets import MNIST
+from torchvision.datasets import CIFAR10
 from torchvision import transforms
 import time
 
