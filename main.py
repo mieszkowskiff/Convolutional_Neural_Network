@@ -44,9 +44,11 @@ class HeadBlock(torch.nn.Module):
             torch.nn.Linear(in_out_channels * 32 * 32, 256),
             torch.nn.ReLU(),
             torch.nn.Dropout(0.5),
+            torch.nn.Linear(256, 256),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.5),
             torch.nn.Linear(256, 10)
         )
-    
     def forward(self, x):
         x = torch.nn.Flatten()(x)
         x = self.head(x)
@@ -99,7 +101,7 @@ def main():
         num_workers = 4
         )
 
-    test_dataset = datasets.ImageFolder(root = "./data/test", transform = transform)
+    test_dataset = datasets.ImageFolder(root = "./data/valid", transform = transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 128, shuffle = False, pin_memory=True, num_workers=4)
     test_dataset_size = len(test_dataset)
 
@@ -120,8 +122,8 @@ def main():
 
     for epoch in range(5):
         start_time = time.time()
-        total_loss = 0
         model.train()
+        total_loss = 0
         for images, labels in tqdm.tqdm(train_loader):
             torch.cuda.empty_cache()
             device_images, device_labels = images.to(device), labels.long().to(device)
@@ -130,6 +132,7 @@ def main():
             loss = criterion(outputs, device_labels)
             loss.backward()
             optimizer.step()
+            total_loss += loss.item()
             
         end_time = time.time()
         correctly_predicted = 0
@@ -143,7 +146,7 @@ def main():
         print(f"Time for testing: {time.time() - end_time}")
 
 
-        print(f"Epoch {epoch + 1}, Accuracy: {correctly_predicted / test_dataset_size}, Time: {end_time - start_time}s")
+        print(f"Epoch {epoch + 1}, Training Loss: {total_loss}, Accuracy: {correctly_predicted / test_dataset_size}, Time: {end_time - start_time}s")
     filename = input("Enter the filename to save the model: ")
     torch.save(model.state_dict(), f"./models/{filename}.pth")
 if __name__ == "__main__":
