@@ -12,8 +12,7 @@ class InitBlock(torch.nn.Module):
     def forward(self, x):
         if self.training:
             x = torch.nn.Sequential(
-                transforms.RandomAffine(degrees = 15, translate = (0.1, 0.1), scale = (0.8, 0.8)),
-                transforms.GaussianBlur(kernel_size = 3, sigma = (0.1, 2.0))
+                transforms.RandomAffine(degrees = 10, translate = (0.1, 0.1), scale = (0.8, 1.2)),
             )(x)
         x = self.init_conv(x)
         return torch.nn.functional.relu(x)
@@ -31,7 +30,7 @@ class ConvolutionalBlock(torch.nn.Module):
             )
         ])
     
-    def forward(self, x, bypass = True):
+    def forward(self, x, bypass = False):
         y = torch.cat([conv(x) for conv in self.convolutions], dim = 1)
         if bypass:
             return torch.nn.functional.relu(y) + x
@@ -46,7 +45,6 @@ class HeadBlock(torch.nn.Module):
             torch.nn.Dropout(0.5),
             torch.nn.Linear(256, 256),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.5),
             torch.nn.Linear(256, 10)
         )
     def forward(self, x):
@@ -95,7 +93,7 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, 
-        batch_size = 64, 
+        batch_size = 128, 
         shuffle = True, 
         pin_memory = True, 
         num_workers = 4
@@ -108,9 +106,9 @@ def main():
 
 
     model = Network(
-        blocks_number = 5,
-        in_out_channels = 128,
-        internal_channels = 64
+        blocks_number = 2,
+        in_out_channels = 32,
+        internal_channels = 32
         )
 
     model.to(device)
