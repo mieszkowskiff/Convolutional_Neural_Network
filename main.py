@@ -1,4 +1,5 @@
 from torchvision import datasets, transforms
+from torchsummary import summary
 import torch
 import time
 import tqdm
@@ -13,7 +14,7 @@ class InitBlock(torch.nn.Module):
             x = torch.nn.Sequential(
                 transforms.RandomAffine(degrees = 15, translate = (0.1, 0.1), scale = (0.8, 0.8)),
                 transforms.GaussianBlur(kernel_size = 3, sigma = (0.1, 2.0))
-            )
+            )(x)
         x = self.init_conv(x)
         return torch.nn.functional.relu(x)
 
@@ -89,7 +90,7 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, 
-        batch_size = 32, 
+        batch_size = 64, 
         shuffle = True, 
         pin_memory = True, 
         num_workers = 4
@@ -108,6 +109,7 @@ def main():
         )
 
     model.to(device)
+    summary(model, (3, 32, 32))
 
     
     criterion = torch.nn.CrossEntropyLoss()
@@ -118,18 +120,20 @@ def main():
         total_loss = 0
         model.train()
         for images, labels in tqdm.tqdm(train_loader):
-            images, labels = images.to(device), labels.long().to(device)
+            torch.cuda.empty_cache()
+            device_images, device_labels = images.to(device), labels.long().to(device)
             optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+            outputs = model(device_images)
+            loss = criterion(outputs, device_labels)
             loss.backward()
             optimizer.step()
+            
         end_time = time.time()
         correctly_predicted = 0
         model.eval()
         with torch.no_grad():
             for images, labels in tqdm.tqdm(test_loader):
-                images, labels = images.to(device), labels.long().to(device)
+                device_images, device_labels = images.to(device), labels.long().to(device)
                 outputs = model(images)
                 preditctions = torch.argmax(outputs, dim = 1)
                 correctly_predicted += (preditctions == labels).sum().item()
