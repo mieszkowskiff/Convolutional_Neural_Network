@@ -3,8 +3,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10
+from pytorch_cinic.dataset import CINIC10
 from torchvision import transforms
+from torchvision import datasets
 import time
 from tqdm import tqdm
 
@@ -77,14 +78,14 @@ class Pool_Block(torch.nn.Module):
 # Model Head
 class Head(nn.Module):
     def __init__(self):
-        super(Head, self).__init__()
+        super().__init__()
         self.head = nn.Sequential(
-            nn.Linear(64 * 32 * 32, 512),
+            nn.Linear(64 * 8 * 8, 256),
             nn.Dropout(0.5),
             nn.ReLU(),
-            nn.Linear(512, 128),
+            nn.Linear(256, 64),
             nn.ReLU(),
-            nn.Linear(128, 10)   
+            nn.Linear(64, 10)   
         )
 
     def forward(self, x):
@@ -94,29 +95,27 @@ class Head(nn.Module):
 # Full Network
 class Network(nn.Module):
     def __init__(self, in_out_channels=32, internal_channels=64):
-        super(Network, self).__init__()
+        super().__init__()
         self.init_conv = nn.Conv2d(3, internal_channels, kernel_size=3, padding=1)
         self.blocks1 = torch.nn.Sequential(
             *[
-                Conv_Block(in_out_channels=64, internal_channels=64) for _ in range(2)
+                Res_Conv_Block(in_out_channels=64, internal_channels=64) for _ in range(4)
             ]
-            #, Pool_Block(kernel_size = 2, stride = 2)
+            , Pool_Block(kernel_size = 2, stride = 2)
         )
-        '''
         self.blocks2 = torch.nn.Sequential(
-            Conv_Block(in_out_channels=32, internal_channels=64),
+            Conv_Block(in_out_channels=64, internal_channels=64),
             *[
-                Conv_Block(in_out_channels=64, internal_channels=64) for _ in range(4)
+                Conv_Block(in_out_channels=64, internal_channels=64) for _ in range(5)
             ]
-            #, Pool_Block(kernel_size = 2, stride = 2)
+            , Pool_Block(kernel_size = 2, stride = 2)
         )
-        '''
         self.head = Head()
 
     def forward(self, x):
         x = F.relu(self.init_conv(x))
         x = self.blocks1(x)
-        #x = self.blocks2(x)
+        x = self.blocks2(x)
         return self.head(x)
 
 def main():
@@ -127,10 +126,13 @@ def main():
 
     # Load and preload MNIST to RAM  
     print("Loading the dataset...")
-    train_dataset = CIFAR10(root='./data', train=True, download=True, transform=transforms.ToTensor())
-    test_dataset = CIFAR10(root='./data', train=False, download=True, transform=transforms.ToTensor())
+    train_dataset = datasets.ImageFolder(root = "./data/train", transform = transforms.ToTensor())
+    test_dataset = datasets.ImageFolder(root = "./data/test", transform = transforms.ToTensor())
+
+    #train_dataset = CINIC10(root='./data/train', download=False, transform=transforms.ToTensor())
+    #test_dataset = CINIC10(root='./data/test', download=False, transform=transforms.ToTensor())
     print("Evaluating the parameters for normalization...")
-    mean_std_path = "mean_std.pt"
+    mean_std_path = "CINIC_mean_std.pt"
     if os.path.exists(mean_std_path):
         print("Loading cached mean and std...")
         mean, std = torch.load(mean_std_path)
@@ -144,28 +146,28 @@ def main():
     ])
     print("Data and label separation...")
 
-    train_dataset = CIFAR10(root='./data', train=True, download=False, transform=transform)
-    test_dataset = CIFAR10(root='./data', train=False, download=False, transform=transform)
+    train_dataset = datasets.ImageFolder(root = "./data/train", transform = transform)
+    test_dataset = datasets.ImageFolder(root = "./data/test", transform = transform)
 
-    if os.path.exists("train_images.pt") and os.path.exists("train_labels.pt"):
+    if os.path.exists("CINIC_train_images.pt") and os.path.exists("CINIC_train_labels.pt"):
         print("Loading cached training data...")
-        train_images = torch.load("train_images.pt")
-        train_labels = torch.load("train_labels.pt")
+        train_images = torch.load("CINIC_train_images.pt")
+        train_labels = torch.load("CINIC_train_labels.pt")
     else:
         print("Preloading training data for the first time...")
         train_images, train_labels = preload_dataset(train_dataset, batch_size=512, num_workers=4, device='cpu')
-        torch.save(train_images, "train_images.pt")
-        torch.save(train_labels, "train_labels.pt")
+        torch.save(train_images, "CINIC_train_images.pt")
+        torch.save(train_labels, "CINIC_train_labels.pt")
 
-    if os.path.exists("test_images.pt") and os.path.exists("test_labels.pt"):
+    if os.path.exists("CINIC_test_images.pt") and os.path.exists("CINIC_test_labels.pt"):
         print("Loading cached test data...")
-        test_images = torch.load("test_images.pt")
-        test_labels = torch.load("test_labels.pt")
+        test_images = torch.load("CINIC_test_images.pt")
+        test_labels = torch.load("CINIC_test_labels.pt")
     else:
         print("Preloading test data for the first time...")
         test_images, test_labels = preload_dataset(test_dataset, batch_size=512, num_workers=4, device='cpu')
-        torch.save(test_images, "test_images.pt")
-        torch.save(test_labels, "test_labels.pt")
+        torch.save(test_images, "CINIC_test_images.pt")
+        torch.save(test_labels, "CINIC_test_labels.pt")
 
     model = Network().to(device)
     criterion = nn.CrossEntropyLoss()

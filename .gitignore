@@ -3,8 +3,4 @@ data/
 models/
 __pycache__/
 notes/
-test_images.pt/
-test_labels.pt/
-train_images.pt/
-train_labels.pt/
-mean_std.pt/
+*.pt
