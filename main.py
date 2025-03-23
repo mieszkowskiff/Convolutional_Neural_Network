@@ -81,11 +81,14 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    train_transform = transforms.ToTensor()
-
-    test_transform = transforms.ToTensor()
-
-    train_dataset = datasets.ImageFolder(root = "./data/train", transform = train_transform)
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.47889522, 0.47227842, 0.43047404], 
+            std=[0.24205776, 0.23828046, 0.25874835]
+        )
+    ])
+    train_dataset = datasets.ImageFolder(root = "./data/train", transform = transform)
 
 
     train_loader = torch.utils.data.DataLoader(
@@ -96,7 +99,7 @@ def main():
         num_workers = 4
         )
 
-    test_dataset = datasets.ImageFolder(root = "./data/test", transform = test_transform)
+    test_dataset = datasets.ImageFolder(root = "./data/test", transform = transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 128, shuffle = False, pin_memory=True, num_workers=4)
     test_dataset_size = len(test_dataset)
 
@@ -134,15 +137,13 @@ def main():
         with torch.no_grad():
             for images, labels in tqdm.tqdm(test_loader):
                 device_images, device_labels = images.to(device), labels.long().to(device)
-                outputs = model(images)
+                outputs = model(device_images)
                 preditctions = torch.argmax(outputs, dim = 1)
-                correctly_predicted += (preditctions == labels).sum().item()
-                loss = criterion(outputs, labels)
-                total_loss += loss.item()
+                correctly_predicted += (preditctions == device_labels).sum().item()
         print(f"Time for testing: {time.time() - end_time}")
 
 
-        print(f"Epoch {epoch + 1}, Loss: {total_loss}, Accuracy: {correctly_predicted / test_dataset_size}, Time: {end_time - start_time}s")
+        print(f"Epoch {epoch + 1}, Accuracy: {correctly_predicted / test_dataset_size}, Time: {end_time - start_time}s")
     filename = input("Enter the filename to save the model: ")
     torch.save(model.state_dict(), f"./models/{filename}.pth")
 if __name__ == "__main__":
