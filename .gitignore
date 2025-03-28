@@ -3,8 +3,9 @@ data/
 models/
 __pycache__/
 notes/
-<<<<<<< HEAD
+benchmarks_prototypes/
+tests/
+*.pth
 *.pt
-=======
-*.pt
->>>>>>> 9dff458770527815531db575d0715465478ee092
+*.txt
+*.png
