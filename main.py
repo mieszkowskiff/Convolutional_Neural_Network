@@ -2,7 +2,7 @@ from torchvision import datasets, transforms
 from torchvision.transforms import AutoAugment, AutoAugmentPolicy
 from torchsummary import summary
 from torch.amp import autocast, GradScaler
-import kornia.augmentation as K
+# import kornia.augmentation as K
 import torch
 import time
 import tqdm
@@ -84,7 +84,7 @@ class Module(torch.nn.Module):
         self.conv_out = ConvolutionalBlock(
                     in_channels = internal_channels, 
                     out_channels = out_channels,
-                    bypass = False,
+                    bypass = True,
                     batch_norm = batch_norm
                 )
         
@@ -132,44 +132,21 @@ class HeadBlock(torch.nn.Module):
 class Network(torch.nn.Module):
     def __init__(self):
         super(Network, self).__init__()
-        self.init_block = InitBlock(out_channels = 128)
+        self.init_block = InitBlock(out_channels = 256)
         self.blocks = torch.nn.ModuleList([
             Module(
-                        conv_blocks_number = 0,
-                        in_channels = 128, 
-                        internal_channels = 128,
-                        out_channels = 128,
-                        bypass = True,
-                        max_pool = False,
-                        batch_norm= True,
-                        dropout = False
-                    ),
-            Module(
-                        conv_blocks_number = 2,
-                        in_channels = 128, 
+                        conv_blocks_number = 12,
+                        in_channels = 256, 
                         internal_channels = 256,
                         out_channels = 256,
                         bypass = True,
                         max_pool = False,
-                        batch_norm= True,
-                        dropout = False
-                    ),
-            Module(
-                        conv_blocks_number = 4,
-                        in_channels = 256, 
-                        internal_channels = 512,
-                        out_channels = 128,
-                        bypass = False,
-                        max_pool = False,
-                        batch_norm= True,
+                        batch_norm = True,
                         dropout = False
                     )
         ]) 
-
-        #self.head = HeadBlock(128, 16)
-        
         self.gap = torch.nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = torch.nn.Linear(512, 10)
+        self.classifier = torch.nn.Linear(256, 10)
 
     def forward(self, x):
         x = self.init_block(x)
@@ -179,8 +156,6 @@ class Network(torch.nn.Module):
         x = self.gap(x)              # [B, 256, 1, 1]
         x = torch.flatten(x, 1)      # [B, 256]
         x = self.classifier(x)       # [B, 10]
-        #x = self.head(x)
- 
         return x
     
 def main():
@@ -210,7 +185,7 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, 
-        batch_size = 128, 
+        batch_size = 64, 
         shuffle = True, 
         pin_memory = True, 
         num_workers = 2
