@@ -21,7 +21,7 @@ sys.path.remove("./read_models/init/model_init")
 # good_no_head     damian1  uberdriver79
 choose_model = "uberdriver79"
 
-picture_index = 15000
+picture_index = 45654
 
 data = "valid"
 

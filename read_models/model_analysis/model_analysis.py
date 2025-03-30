@@ -9,13 +9,13 @@ import torch
 import tqdm
 import sys
 
-sys.path.append("..\init\model_init")
+sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
-sys.path.remove("..\init\model_init")
+sys.path.remove("./read_models/init/model_init")
 
-# good_no_head   damian1   hubert1   hubert2   3_head   2_head   1_head   five_twelve
-#    76.8%         
-choose_model = "five_twelve"
+# underdog      double_pool     new_mindfuck        new_double_pool     long_runner     no_head  
+# good_no_head     damian1  
+choose_model = "damian1"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -32,14 +32,8 @@ def main():
         )
     ])
 
-    test_dataset = datasets.ImageFolder(root = "../../data/valid", transform = test_transform)
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset, 
-        batch_size = 256, 
-        shuffle = False, 
-        pin_memory=True, 
-        num_workers=2
-    )
+    test_dataset = datasets.ImageFolder(root = "./data/valid", transform = test_transform)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1024, shuffle = False, pin_memory=True, num_workers=2)
     test_dataset_size = len(test_dataset)
 
     model, model_path, conf_mat_name = initialize_model(choose_model)
