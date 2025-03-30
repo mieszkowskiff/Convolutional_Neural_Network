@@ -15,7 +15,7 @@ sys.path.remove("./read_models/init/model_init")
 
 # underdog      double_pool     new_mindfuck        new_double_pool     long_runner     no_head  
 # good_no_head     damian1  
-choose_model = "damian1"
+choose_model = "damian1_TUNED"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']

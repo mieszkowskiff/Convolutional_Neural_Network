@@ -154,20 +154,20 @@ def main():
 
     cm = confusion_matrix(all_labels, all_preds)
 
-            plt.figure(figsize=(10, 8))
-            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                    xticklabels=class_names, yticklabels=class_names)
-            plt.xlabel("Predicted")
-            plt.ylabel("True Label")
-            plt.title("Confusion Matrix")
-            plt.tight_layout()
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+            xticklabels=class_names, yticklabels=class_names)
+    plt.xlabel("Predicted")
+    plt.ylabel("True Label")
+    plt.title("Confusion Matrix")
+    plt.tight_layout()
 
-            # Save to path
-            conf_mat_path = "./conf_matrix/" + choose_model + "_TUNED_conf_mat.png" 
-            plt.savefig(conf_mat_path)
-            plt.close()
+    # Save to path
+    conf_mat_path = "./conf_matrix/" + choose_model + "_TUNED_conf_mat.png" 
+    plt.savefig(conf_mat_path)
+    plt.close()
 
-            best_acc = acc
+    best_acc = acc
 
     # at the end of the training, type the name of the model, it will move the best model instance 
     # from chechpoint to models directory and name the model and optimizer files accordingly to the name 

@@ -12,9 +12,9 @@ import time
 import tqdm
 import sys
 
-sys.path.append("..\init\model_init")
+sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
-sys.path.remove("..\init\model_init")
+sys.path.remove("./read_models/init/model_init")
 
 #
 
@@ -40,7 +40,7 @@ def main():
         )
     ])
 
-    test_dataset = datasets.ImageFolder(root = "../../data/test", transform = test_transform)
+    test_dataset = datasets.ImageFolder(root = "./data/test", transform = test_transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1024, shuffle = False, pin_memory=True, num_workers=2)
     test_dataset_size = len(test_dataset)
 

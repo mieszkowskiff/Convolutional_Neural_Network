@@ -12,8 +12,8 @@ from model_1_head import Network as head_1
 from model_five_twelve import Network as five_twelve
 
 def initialize_model(model_name):
-    model_path = '../../models/' + model_name + '.pth'
-    conf_mat_name = './conf_matrix/' + model_name + '_conf_matr.png'
+    model_path = './models/' + model_name + '.pth'
+    conf_mat_name = './read_models/model_analysis/conf_matrix/' + model_name + '_conf_matr.png'
     
     if(model_name == "new_mindfuck"):
         model = new_mindfuck()
@@ -36,7 +36,7 @@ def initialize_model(model_name):
     if(model_name == "good_no_head"):
         model = good_no_head()
         
-    if(model_name == "damian1"):
+    if("damian1" in model_name):
         model = damian1()
 
     

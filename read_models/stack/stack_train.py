@@ -16,10 +16,9 @@ import sys
 import copy
 import shutil
 
-sys.path.append("..\init\model_init")
+sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
-sys.path.remove("..\init\model_init")
-
+sys.path.remove("./read_models/init/model_init")
 #good_no_head   damian1   3_head   2_head   1_head   hubert1   hubert2
 
 #choose_models = ['good_no_head', 'damian1', 'hubert1', 'hubert2', '1_head', '2_head', '3_head']

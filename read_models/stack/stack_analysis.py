@@ -14,13 +14,13 @@ import sys
 
 from stack_train import StackedEnsemble
 
-sys.path.append("..\init\model_init")
+sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
-sys.path.remove("..\init\model_init")
+sys.path.remove("./read_models/init/model_init")
 
-sys.path.append("./head_init")
+sys.path.append("./read_models/stack/head_init")
 from head_init import initialize_head
-sys.path.remove("./head_init")
+sys.path.remove("./read_models/stack/head_init")
 
 #good_no_head   damian1   3_head   2_head   1_head   hubert1   hubert2
 
@@ -43,7 +43,7 @@ def main():
         )
     ])
 
-    test_dataset = datasets.ImageFolder(root = "../../data/valid", transform = test_transform)
+    test_dataset = datasets.ImageFolder(root = "./data/valid", transform = test_transform)
     
     test_loader = torch.utils.data.DataLoader(
         test_dataset, 
@@ -57,7 +57,7 @@ def main():
     models = []
 
     for name in choose_models:
-        tmp_model, model_path, _ = initialize_model(name, tuned = True)
+        tmp_model, model_path, _ = initialize_model(name)
         print(model_path)
         models.append(tmp_model)
         models[-1].load_state_dict(torch.load(model_path))
