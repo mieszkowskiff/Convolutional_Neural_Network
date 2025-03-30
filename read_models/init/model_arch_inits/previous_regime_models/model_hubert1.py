@@ -1,3 +1,5 @@
+from torchvision import transforms
+import kornia.augmentation as K
 import torch
 
 import components

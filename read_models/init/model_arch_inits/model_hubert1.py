@@ -18,7 +18,7 @@ class Network(torch.nn.Module):
                         dropout = False
                     ),
             components.Module(
-                        conv_blocks_number = 2,
+                        conv_blocks_number = 4,
                         in_channels = 128, 
                         internal_channels = 256,
                         out_channels = 256,
@@ -28,7 +28,7 @@ class Network(torch.nn.Module):
                         dropout = False
                     ),
             components.Module(
-                        conv_blocks_number = 0,
+                        conv_blocks_number = 1,
                         in_channels = 256, 
                         internal_channels = 512,
                         out_channels = 512,
