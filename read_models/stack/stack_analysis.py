@@ -10,19 +10,23 @@ from sklearn.metrics import confusion_matrix
 import torch
 import time
 import tqdm
+import sys
+
+from stack_train import StackedEnsemble
 
 sys.path.append("..\init\model_init")
 from model_init import initialize_model
 sys.path.remove("..\init\model_init")
 
-#'underdog' - 75.5  'double_pool' - 74.8  'new_mindfuck' - 70  'new_double_pool' - 75.5  'long_runner' - 72.1          
+sys.path.append("./head_init")
+from head_init import initialize_head
+sys.path.remove("./head_init")
 
-#choose_models = ['long_runner', 'new_double_pool', 'underdog', 'new_mindfuck', 'double_pool']
-choose_models = ['long_runner', 'new_double_pool', 'underdog', 'double_pool']
+#good_no_head   damian1   3_head   2_head   1_head   hubert1   hubert2
 
-acc_eval = False
-#acc_models = [0.721, 0.755, 0.755, 0.7, 0.748]
-acc_models = [0.721, 0.755, 0.755, 0.748]
+#choose_models = ['good_no_head', 'damian1', 'hubert1', 'hubert2', '1_head', '2_head', '3_head']
+choose_models = ['damian1', 'hubert1', 'hubert2']
+choose_head = "small_damian1_hubert1_hubert2_HEAD"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -43,7 +47,7 @@ def main():
     
     test_loader = torch.utils.data.DataLoader(
         test_dataset, 
-        batch_size = 1024, 
+        batch_size = 512, 
         shuffle = False, 
         pin_memory=True, 
         num_workers=2
@@ -51,55 +55,51 @@ def main():
     test_dataset_size = len(test_dataset)
 
     models = []
-    ensembled_name = ''
+
     for name in choose_models:
-        ensembled_name += name
-        ensembled_name += '_'
-    conf_mat_name = './conf_matrix/combined/' + ensembled_name + 'conf_matr.png'
-    
-    counter = 0
-    for name in choose_models:
-        tmp_model, model_path, _ = initialize_model(name)
+        tmp_model, model_path, _ = initialize_model(name, tuned = True)
+        print(model_path)
         models.append(tmp_model)
         models[-1].load_state_dict(torch.load(model_path))
-        models[-1].to(device)
         models[-1].eval()
         print(name + " model loaded.")
-        #summary(model, (3, 32, 32))
-        if(acc_eval):
-            correctly_predicted = 0
-            with torch.no_grad():
-                print(f"Using device: {device}")
-                for images, labels in tqdm.tqdm(test_loader):
-                    device_images, device_labels = images.to(device), labels.long().to(device)
-                    outputs = models[-1](device_images)
-                    preditctions = torch.argmax(outputs, dim = 1)
-                    correctly_predicted += (preditctions == device_labels).sum().item() 
-            
-            acc_models[counter] = correctly_predicted / test_dataset_size
-            counter += 1  
-            print(f"Accuracy: {correctly_predicted / test_dataset_size}")
+
+    head_path = "./heads/" + choose_head + ".pth"
+    meta_head = initialize_head(choose_head)
+    meta_head.load_state_dict(torch.load(head_path))
+    ensemble = StackedEnsemble(models = models, meta_head = meta_head)
+    ensemble.to(device)
+    # freeze conv models parameters, only meta head is being trained
+    '''
+    for model in ensemble.models:
+        for param in model.parameters():
+            param.requires_grad = False
+    for param in ensemble.meta_head.parameters():
+        param.requires_grad = False
+    '''
+    for param in ensemble.parameters():
+        param.requires_grad = False
     
+    ensemble.eval()
     correctly_predicted = 0
     all_preds = []
     all_labels = []
+    
     with torch.no_grad():
+        print(f"Using device: {device}")
         for images, labels in tqdm.tqdm(test_loader):
-            device_images = images.to(device)
-            device_labels = labels.long().to(device)
-            outputs = acc_models[0] * torch.nn.Softmax(dim = 1)(models[0](device_images))
-            for i in range(1, len(choose_models)-1):
-                outputs += acc_models[i] * torch.nn.Softmax(dim = 1)(models[i](device_images))
-            outputs /= len(choose_models)
-            predictions = torch.argmax(outputs, dim=1)
+            device_images, device_labels = images.to(device), labels.long().to(device)
 
+            outputs = ensemble(device_images)
+            predictions = torch.argmax(outputs, dim = 1)
+            
             correctly_predicted += (predictions == device_labels).sum().item()
-
+            
             # Save for confusion matrix
             all_preds.extend(predictions.cpu().numpy())
             all_labels.extend(device_labels.cpu().numpy())
-
-    print(f"Ensembled models accuracy: {correctly_predicted / test_dataset_size:.4f}")
+    
+    print(f"Accuracy: {correctly_predicted / test_dataset_size:.4f}")
 
     cm = confusion_matrix(all_labels, all_preds)
 
@@ -112,11 +112,9 @@ def main():
     plt.tight_layout()
 
     # Save to path
+    conf_mat_name = "./conf_matrix/" + choose_head + "_conf_mat.png"
     plt.savefig(conf_mat_name)
     plt.close()
-    
-    
 
 if __name__ == "__main__":
     main()
-    

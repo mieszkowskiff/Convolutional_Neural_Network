@@ -20,10 +20,10 @@ sys.path.append("..\init\model_init")
 from model_init import initialize_model
 sys.path.remove("..\init\model_init")
 
-#good_no_head   damian1   3_head   2_head   1_head   hubert1   hubert2   five_twelve
+#good_no_head   damian1   3_head   2_head   1_head   hubert1   hubert2
 
 #choose_models = ['good_no_head', 'damian1', 'hubert1', 'hubert2', '1_head', '2_head', '3_head']
-choose_model = 'five_twelve'
+choose_model = 'good_no_head'
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -54,14 +54,14 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, 
-        batch_size = 64, 
+        batch_size = 128, 
         shuffle = True, 
         pin_memory = True, 
         num_workers = 2
     )
     test_loader = torch.utils.data.DataLoader(
         test_dataset, 
-        batch_size = 128, 
+        batch_size = 512, 
         shuffle = False, 
         pin_memory=True, 
         num_workers=2
@@ -76,12 +76,9 @@ def main():
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
     opt_path = '../../models/' + choose_model + '_optim.pth'
-    optimizer.load_state_dict(torch.load(opt_path))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = 0.0001
-    best_acc = 0
+    optimizer.load_state_dict(opt_path)
 
-    for epoch in range(5):
+    for epoch in range(1):
         print(f"Using device: {device}")
         start_time = time.time()
         model.train()
@@ -139,67 +136,6 @@ def main():
 
             best_acc = acc
     
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = 0.00001
-
-    for epoch in range(15):
-        print(f"Using device: {device}")
-        start_time = time.time()
-        model.train()
-        scaler = GradScaler()
-        total_loss = 0
-        for images, labels in tqdm.tqdm(train_loader):
-            torch.cuda.empty_cache()
-            device_images, device_labels = images.to(device), labels.long().to(device)
-            optimizer.zero_grad()
-            with torch.amp.autocast(device_type='cuda'):
-                outputs = model(device_images)
-                loss = criterion(outputs, device_labels)
-            
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-            total_loss += loss.item()
-            
-        end_time = time.time()
-        correctly_predicted = 0
-        all_preds = []
-        all_labels = []
-        model.eval()
-        with torch.no_grad():
-            print(f"Using device: {device}")
-            for images, labels in tqdm.tqdm(test_loader):
-                device_images, device_labels = images.to(device), labels.long().to(device)
-                outputs = model(device_images)
-                predictions = torch.argmax(outputs, dim = 1)
-                correctly_predicted += (predictions == device_labels).sum().item()
-
-                all_preds.extend(predictions.cpu().numpy())
-                all_labels.extend(device_labels.cpu().numpy())
-        print(f"Time for testing: {time.time() - end_time}")
-        acc = correctly_predicted / test_dataset_size
-        print(f"Epoch {epoch + 1}, Training Loss: {total_loss}, Accuracy: {acc}, Time: {end_time - start_time}s")
-        if(acc>best_acc):
-            torch.save(copy.deepcopy(model.state_dict()), f"./fine_tuned_models/checkpoint/model.pth")
-            torch.save(optimizer.state_dict(), f"./fine_tuned_models/checkpoint/optimizer.pth")
-            
-            cm = confusion_matrix(all_labels, all_preds)
-
-            plt.figure(figsize=(10, 8))
-            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                    xticklabels=class_names, yticklabels=class_names)
-            plt.xlabel("Predicted")
-            plt.ylabel("True Label")
-            plt.title("Confusion Matrix")
-            plt.tight_layout()
-
-            # Save to path
-            conf_mat_path = "./conf_matrix/" + choose_model + "_TUNED_conf_mat.png" 
-            plt.savefig(conf_mat_path)
-            plt.close()
-
-            best_acc = acc
-
     # at the end of the training, type the name of the model, it will move the best model instance 
     # from chechpoint to models directory and name the model and optimizer files accordingly to the name 
     model_name = choose_model + "_TUNED"

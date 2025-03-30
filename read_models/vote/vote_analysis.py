@@ -16,14 +16,14 @@ sys.path.append("..\init\model_init")
 from model_init import initialize_model
 sys.path.remove("..\init\model_init")
 
-#'underdog' - 75.5  'double_pool' - 74.8  'new_mindfuck' - 70  'new_double_pool' - 75.5  'long_runner' - 72.1          
+#
 
-#choose_models = ['long_runner', 'new_double_pool', 'underdog', 'new_mindfuck', 'double_pool']
-choose_models = ['long_runner', 'new_double_pool', 'underdog', 'double_pool']
+#choose_models = ['good_no_head', 'damian1']
+choose_models = ['good_no_head', 'damian1']
 
 acc_eval = False
-#acc_models = [0.721, 0.755, 0.755, 0.7, 0.748]
-acc_models = [0.721, 0.755, 0.755, 0.748]
+#acc_models = [0.768, 0.778]
+acc_models = [0.768, 0.778]
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']

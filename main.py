@@ -16,7 +16,7 @@ class InitBlock(torch.nn.Module):
     
     def forward(self, x):
         # since AutoAugment is applied in transforms.Compose()
-        # we dont use previous augmenting
+        # we dont use previous augmentation
         if False:
             x = torch.nn.Sequential(
                 transforms.RandomAffine(degrees = 14, translate = (0.1, 0.1), scale = (0.7, 1.3)),
@@ -138,7 +138,7 @@ class Network(torch.nn.Module):
                         conv_blocks_number = 12,
                         in_channels = 256, 
                         internal_channels = 256,
-                        out_channels = 256,
+                        out_channels = 512,
                         bypass = True,
                         max_pool = False,
                         batch_norm = True,
@@ -192,7 +192,7 @@ def main():
     )
     test_loader = torch.utils.data.DataLoader(
         test_dataset, 
-        batch_size = 512, 
+        batch_size = 128, 
         shuffle = False, 
         pin_memory=True, 
         num_workers=2
