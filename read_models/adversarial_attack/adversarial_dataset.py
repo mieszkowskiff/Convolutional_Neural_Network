@@ -24,19 +24,17 @@ sys.path.remove("./read_models/init/model_init")
 # good_no_head     damian1  uberdriver79
 choose_model = "uberdriver79"
 
-data = "valid"
+data = "train"
 
-new_data_path = "./data/adversarial_data"
+new_data_path = "./data/adversarial_data001"
 
 
-eps = 0.05
+eps = 0.02
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
 
 def main():
-
-    folder_path = "my_folder"
     shutil.rmtree(new_data_path, ignore_errors=True)  
     os.makedirs(new_data_path, exist_ok=True)
     for class_name in class_names:

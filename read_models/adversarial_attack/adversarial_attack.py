@@ -21,11 +21,11 @@ sys.path.remove("./read_models/init/model_init")
 # good_no_head     damian1  uberdriver79
 choose_model = "uberdriver79"
 
-picture_index = 45654
+picture_index = 15000
 
 data = "valid"
 
-eps = 0.05
+eps = 0.02
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']

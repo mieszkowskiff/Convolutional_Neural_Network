@@ -19,36 +19,18 @@ import shutil
 sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
 sys.path.remove("./read_models/init/model_init")
-#good_no_head   damian1   3_head   2_head   1_head   hubert1   hubert2
 
-#choose_models = ['good_no_head', 'damian1', 'hubert1', 'hubert2', '1_head', '2_head', '3_head']
-choose_models = ['damian1', 'hubert1', 'hubert2']
+choose_models = ['uberdriver79', 'damian1_TUNED', 'hubert1_TUNED', 'hubert2_TUNED']
 
 class MetaStackingHead(nn.Module):
     def __init__(self):
         super(MetaStackingHead, self).__init__()
 
         self.net = nn.Sequential(
-            nn.Linear(30, 256),
+            nn.Linear(40, 256),
             nn.BatchNorm1d(256),
             nn.ReLU(inplace=True),
             #nn.Dropout(0.2),
-
-            nn.Linear(256, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(inplace=True),
-            #nn.Dropout(0.2),
-
-            
-            nn.Linear(256, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(inplace=True),
-            #nn.Dropout(dropout),
-
-            nn.Linear(256, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(inplace=True),
-            #nn.Dropout(dropout),
 
             nn.Linear(256, 10)
         )
@@ -88,8 +70,8 @@ def main():
         )
     ])
 
-    train_dataset = datasets.ImageFolder(root = "../../data/train", transform = train_transform)
-    test_dataset = datasets.ImageFolder(root = "../../data/valid", transform = test_transform)
+    train_dataset = datasets.ImageFolder(root = "./data/train", transform = train_transform)
+    test_dataset = datasets.ImageFolder(root = "./data/valid", transform = test_transform)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, 
@@ -110,7 +92,7 @@ def main():
     models = []
 
     for name in choose_models:
-        tmp_model, model_path, _ = initialize_model(name, tuned = True)
+        tmp_model, model_path, _ = initialize_model(name)
         print(model_path)
         models.append(tmp_model)
         models[-1].load_state_dict(torch.load(model_path))
@@ -164,8 +146,8 @@ def main():
         acc = correctly_predicted / test_dataset_size
         print(f"Epoch {epoch + 1}, Training Loss: {total_loss}, Accuracy: {acc}, Time: {end_time - start_time}s")
         if(acc>best_acc):
-            torch.save(copy.deepcopy(ensemble.meta_head.state_dict()), f"./heads/checkpoint/model.pth")
-            torch.save(optimizer.state_dict(), f"./heads/checkpoint/optimizer.pth")
+            torch.save(copy.deepcopy(ensemble.meta_head.state_dict()), f"./read_models/stack/heads/checkpoint/model.pth")
+            torch.save(optimizer.state_dict(), f"./read_models/stack/heads/checkpoint/optimizer.pth")
             best_acc = acc
 
     # at the end of the training, type the name of the model, it will move the best model instance 
@@ -176,9 +158,9 @@ def main():
         comb += "_"
         comb += it
     model_name = filename + comb + "_HEAD" 
-    opt_name = filename + comb + "_OPTIM"
-    shutil.move("./heads/checkpoint/model.pth", f"./heads/{model_name}.pth")
-    shutil.move("./heads/checkpoint/optimizer.pth", f"./heads/{opt_name}.pth")
+    opt_name = filename + comb + "_optim"
+    shutil.move("./read_models/stack/heads/checkpoint/model.pth", f"./read_models/stack/heads/{model_name}.pth")
+    shutil.move("./read_models/stack/heads/checkpoint/optimizer.pth", f"./read_models/stack/heads/{opt_name}.pth")
 
 if __name__ == "__main__":
     main()

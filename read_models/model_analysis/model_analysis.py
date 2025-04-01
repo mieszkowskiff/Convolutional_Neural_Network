@@ -13,9 +13,7 @@ sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
 sys.path.remove("./read_models/init/model_init")
 
-# underdog      double_pool     new_mindfuck        new_double_pool     long_runner     no_head  
-# good_no_head     damian1  
-choose_model = "damian1_TUNED"
+choose_model = "hubert2_TUNED"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -32,7 +30,7 @@ def main():
         )
     ])
 
-    test_dataset = datasets.ImageFolder(root = "./data/valid", transform = test_transform)
+    test_dataset = datasets.ImageFolder(root = "./data/test", transform = test_transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1024, shuffle = False, pin_memory=True, num_workers=2)
     test_dataset_size = len(test_dataset)
 
@@ -72,10 +70,7 @@ def main():
     plt.title("Confusion Matrix")
     plt.tight_layout()
 
-    # Save to path
-    plt.savefig(conf_mat_name)
-    plt.close()
-
+    plt.show()
 if __name__ == "__main__":
     main()
     

@@ -18,12 +18,10 @@ sys.path.remove("./read_models/init/model_init")
 
 #
 
-#choose_models = ['good_no_head', 'damian1']
-choose_models = ['good_no_head', 'damian1']
+choose_models = ['uberdriver79', 'damian1_TUNED', "hubert1_TUNED", "hubert2_TUNED"]
 
 acc_eval = False
-#acc_models = [0.768, 0.778]
-acc_models = [0.768, 0.778]
+acc_models = [0.772, 0.805, 0.816, 0.811]
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -40,7 +38,7 @@ def main():
         )
     ])
 
-    test_dataset = datasets.ImageFolder(root = "./data/test", transform = test_transform)
+    test_dataset = datasets.ImageFolder(root = "./data/valid", transform = test_transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1024, shuffle = False, pin_memory=True, num_workers=2)
     test_dataset_size = len(test_dataset)
 
@@ -49,7 +47,6 @@ def main():
     for name in choose_models:
         ensembled_name += name
         ensembled_name += '_'
-    conf_mat_name = './conf_matrix/combined/' + ensembled_name + 'conf_matr.png'
     
     counter = 0
     # loading inicated models and evaluating accuracy if acc_eval = True
@@ -107,9 +104,7 @@ def main():
     plt.title("Confusion Matrix")
     plt.tight_layout()
 
-    # Save to path
-    plt.savefig(conf_mat_name)
-    plt.close()
+    plt.show()
     
 if __name__ == "__main__":
     main()

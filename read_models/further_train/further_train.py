@@ -20,8 +20,6 @@ sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
 sys.path.remove("./read_models/init/model_init")
 
-#'underdog' - 75.5  'double_pool' - 74.8  'new_mindfuck' - 70  'new_double_pool' - 75.5  'long_runner' - 72.1          
-#choose_models = ['long_runner', 'new_double_pool', 'underdog', 'new_mindfuck', 'double_pool']
 choose_model = "uberdriver79"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
@@ -48,7 +46,7 @@ def main():
         )
     ])
 
-    train_dataset = datasets.ImageFolder(root = "./data/adversarial_data", transform = train_transform)
+    train_dataset = datasets.ImageFolder(root = "./data/train", transform = train_transform)
     test_dataset = datasets.ImageFolder(root = "./data/valid", transform = test_transform)
 
     train_loader = torch.utils.data.DataLoader(
@@ -129,8 +127,8 @@ def main():
         acc = correctly_predicted / test_dataset_size
         print(f"Epoch {epoch + 1}, Training Loss: {total_loss}, Accuracy: {acc}, Time: {end_time - start_time}s")
         if(acc>best_acc):
-            torch.save(copy.deepcopy(model.state_dict()), f"./fine_tuned_models/checkpoint/model.pth")
-            torch.save(optimizer.state_dict(), f"./fine_tuned_models/checkpoint/optimizer.pth")
+            torch.save(copy.deepcopy(model.state_dict()), f"./models/checkpoint/model.pth")
+            torch.save(optimizer.state_dict(), f"./models/checkpoint/optimizer.pth")
             
             cm = confusion_matrix(all_labels, all_preds)
 
@@ -141,11 +139,7 @@ def main():
             plt.ylabel("True Label")
             plt.title("Confusion Matrix")
             plt.tight_layout()
-
-            # Save to path
-            conf_mat_path = "./conf_matrix/" + choose_model + "_TUNED_conf_mat.png" 
-            plt.savefig(conf_mat_path)
-            plt.close()
+            plt.show()
 
             best_acc = acc
     
@@ -162,10 +156,7 @@ def main():
     plt.title("Confusion Matrix")
     plt.tight_layout()
 
-    # Save to path
-    conf_mat_path = "./conf_matrix/" + choose_model + "_TUNED_conf_mat.png" 
-    plt.savefig(conf_mat_path)
-    plt.close()
+    plt.show()
 
     best_acc = acc
 
@@ -173,8 +164,8 @@ def main():
     # from chechpoint to models directory and name the model and optimizer files accordingly to the name 
     model_name = choose_model + "_TUNED"
     opt_name =  choose_model + "_TUNED" + "_optim"
-    shutil.move("./fine_tuned_models/checkpoint/model.pth", f"./fine_tuned_models/{model_name}.pth")
-    shutil.move("./fine_tuned_models/checkpoint/optimizer.pth", f"./fine_tuned_models/{opt_name}.pth")
+    shutil.move("./models/checkpoint/model.pth", f"./models/{model_name}.pth")
+    shutil.move("./models/checkpoint/optimizer.pth", f"./models/{opt_name}.pth")
 
 if __name__ == "__main__":
     main()

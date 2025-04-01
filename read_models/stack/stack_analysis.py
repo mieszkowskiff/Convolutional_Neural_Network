@@ -25,8 +25,8 @@ sys.path.remove("./read_models/stack/head_init")
 #good_no_head   damian1   3_head   2_head   1_head   hubert1   hubert2
 
 #choose_models = ['good_no_head', 'damian1', 'hubert1', 'hubert2', '1_head', '2_head', '3_head']
-choose_models = ['damian1', 'hubert1', 'hubert2']
-choose_head = "small_damian1_hubert1_hubert2_HEAD"
+choose_models = ["uberdriver79", 'damian1_TUNED', 'hubert1_TUNED', 'hubert2_TUNED']
+choose_head = "small_head"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -64,22 +64,17 @@ def main():
         models[-1].eval()
         print(name + " model loaded.")
 
-    head_path = "./heads/" + choose_head + ".pth"
+    head_path = "./read_models/stack/heads/" + choose_head + ".pth"
     meta_head = initialize_head(choose_head)
     meta_head.load_state_dict(torch.load(head_path))
     ensemble = StackedEnsemble(models = models, meta_head = meta_head)
     ensemble.to(device)
-    # freeze conv models parameters, only meta head is being trained
-    '''
-    for model in ensemble.models:
-        for param in model.parameters():
-            param.requires_grad = False
-    for param in ensemble.meta_head.parameters():
-        param.requires_grad = False
-    '''
+    
+    summary(ensemble, (3, 32, 32))
+
     for param in ensemble.parameters():
         param.requires_grad = False
-    
+
     ensemble.eval()
     correctly_predicted = 0
     all_preds = []
@@ -111,9 +106,7 @@ def main():
     plt.title("Confusion Matrix")
     plt.tight_layout()
 
-    # Save to path
-    conf_mat_name = "./conf_matrix/" + choose_head + "_conf_mat.png"
-    plt.savefig(conf_mat_name)
+    plt.show()
     plt.close()
 
 if __name__ == "__main__":
