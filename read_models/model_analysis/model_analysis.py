@@ -9,6 +9,8 @@ import torch
 import tqdm
 import sys
 
+torch.manual_seed(13)
+
 sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
 sys.path.remove("./read_models/init/model_init")
@@ -30,7 +32,7 @@ def main():
         )
     ])
 
-    test_dataset = datasets.ImageFolder(root = "./data/test", transform = test_transform)
+    test_dataset = datasets.ImageFolder(root = "./data/valid", transform = test_transform)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1024, shuffle = False, pin_memory=True, num_workers=2)
     test_dataset_size = len(test_dataset)
 

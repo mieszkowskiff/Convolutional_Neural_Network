@@ -12,16 +12,18 @@ import time
 import tqdm
 import sys
 
+torch.manual_seed(13)
+
 sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
 sys.path.remove("./read_models/init/model_init")
 
 #
 
-choose_models = ['uberdriver79', 'damian1_TUNED', "hubert1_TUNED", "hubert2_TUNED"]
+choose_models = ['damian1_TUNED', "hubert1_TUNED", "hubert2_TUNED"]
 
 acc_eval = False
-acc_models = [0.772, 0.805, 0.816, 0.811]
+acc_models = [0.805, 0.816, 0.811]
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']

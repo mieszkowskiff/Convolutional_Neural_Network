@@ -14,6 +14,8 @@ import sys
 
 from stack_train import StackedEnsemble
 
+torch.manual_seed(13)
+
 sys.path.append("./read_models/init/model_init")
 from model_init import initialize_model
 sys.path.remove("./read_models/init/model_init")
