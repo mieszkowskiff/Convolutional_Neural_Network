@@ -57,7 +57,7 @@ Ensure your directory is strucutred as below:
 
 ## Setup
 
-**Linux**:
+**Linux**:  
 Create virual environment:
 ```{Bash}
 python3 -m venv venv
@@ -72,6 +72,10 @@ Ensure you have `tkinter` installed. If not, install it:
 sudo apt-get update
 sudo apt-get install python3-tk
 ```
+
+## How to use
+
+Run `main.py` to train the model. You are welcome to experiment with architecture. After training the model go to `/process_models` to do further experiments.
 
 ## Adversarial attack
 
