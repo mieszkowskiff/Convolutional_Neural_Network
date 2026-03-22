@@ -16,13 +16,12 @@ import sys
 import copy
 import shutil
 
+sys.path.append('./')
+from main import Network
+
 torch.manual_seed(13)
 
-sys.path.append("./read_models/init/model_init")
-from model_init import initialize_model
-sys.path.remove("./read_models/init/model_init")
-
-choose_model = "uberdriver79"
+choose_model = "test_model"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -67,8 +66,8 @@ def main():
     )
     test_dataset_size = len(test_dataset)
 
-    model, model_path, conf_mat_path = initialize_model(choose_model)
-    model.load_state_dict(torch.load("./models/uberdriver79.pth"))
+    model = Network()
+    model.load_state_dict(torch.load("./models/test_model.pth"))
     model.to(device)
     summary(model, (3, 32, 32))
 

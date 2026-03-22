@@ -2,7 +2,6 @@ from torchvision import datasets, transforms
 from torchvision.transforms import AutoAugment, AutoAugmentPolicy
 from torchsummary import summary
 from torch.amp import autocast, GradScaler
-# import kornia.augmentation as K
 import torch
 import time
 import tqdm
@@ -17,16 +16,6 @@ class InitBlock(torch.nn.Module):
         self.init_conv = torch.nn.Conv2d(3, out_channels, kernel_size = 3, stride = 1, padding = 1)
     
     def forward(self, x):
-        # since AutoAugment is applied in transforms.Compose()
-        # we dont use previous augmentation
-        if False:
-            x = torch.nn.Sequential(
-                transforms.RandomAffine(degrees = 14, translate = (0.1, 0.1), scale = (0.7, 1.3)),
-                transforms.RandomHorizontalFlip(p=0.3),
-                #transforms.RandomVerticalFlip(p=0.3),
-                K.RandomGaussianBlur((3, 3), (0.1, 0.3), p=0.2),
-                K.RandomGaussianNoise(mean=0.0, std=0.02, p=0.2)
-            )(x)
         x = self.init_conv(x)
         return torch.nn.functional.relu(x, inplace = True)
 
@@ -117,10 +106,6 @@ class HeadBlock(torch.nn.Module):
             torch.nn.ReLU(inplace = True),
             torch.nn.Dropout(0.2),
 
-            torch.nn.Linear(1024, 1024),
-            torch.nn.ReLU(inplace = True),
-            torch.nn.Dropout(0.2),
-
             torch.nn.Linear(1024, 256),
             torch.nn.ReLU(inplace = True),
 
@@ -134,24 +119,20 @@ class HeadBlock(torch.nn.Module):
 class Network(torch.nn.Module):
     def __init__(self):
         super(Network, self).__init__()
-        self.init_block = InitBlock(out_channels = 400)
+        self.init_block = InitBlock(out_channels = 128)
         self.blocks = torch.nn.ModuleList([
             Module(
-                        conv_blocks_number = 15,
-                        in_channels = 400, 
-                        internal_channels = 400,
-                        out_channels = 400,
-                        conv_blocks_number = 12,
-                        in_channels = 256, 
-                        internal_channels = 256,
-                        out_channels = 512,
+                        conv_blocks_number = 8,
+                        in_channels = 128, 
+                        internal_channels = 128,
+                        out_channels = 128,
                         bypass = True,
                         max_pool = False,
                         batch_norm = True,
                         dropout = False
                     ),
             ConvolutionalBlock(
-                in_channels = 400,
+                in_channels = 128,
                 out_channels = 10,
             )
         ]) 
@@ -163,8 +144,8 @@ class Network(torch.nn.Module):
         x = torch.nn.functional.relu(x)
         for it in self.blocks:
             x = it(x)
-        x = self.gap(x)              # [B, 256, 1, 1]
-        x = torch.flatten(x, 1)      # [B, 256]
+        x = self.gap(x)              # [B, 128, 1, 1]
+        x = torch.flatten(x, 1)      # [B, 128]
         #x = self.classifier(x)       # [B, 10]
         return x
     
@@ -215,12 +196,12 @@ def main():
     summary(model, (3, 32, 32))
 
     criterion = torch.nn.CrossEntropyLoss()
-    # removed weight_decay, regularization not needed
+
     optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
-    # monitor best acc model and save it to chechpoint
+
     best_acc = 0
 
-    for epoch in range(30):
+    for epoch in range(10):
         print(f"Using device: {device}")
         start_time = time.time()
 

@@ -1,5 +1,5 @@
 data/
-.venv/
+venv/
 __pycache__/
 notes/
 benchmarks_prototypes/
@@ -8,3 +8,8 @@ tests/
 *.pt
 *.txt
 *.png
+.vscode
+
+!img/after_adversarial_attack.png
+!img/before_adversarial_attack.png
+!img/confusion_matrix.png

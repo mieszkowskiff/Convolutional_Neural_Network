@@ -13,15 +13,12 @@ import time
 import tqdm
 import sys
 
+sys.path.append('./')
+from main import Network
+
 torch.manual_seed(13)
 
-sys.path.append("./read_models/init/model_init")
-from model_init import initialize_model
-sys.path.remove("./read_models/init/model_init")
-
-# underdog      double_pool     new_mindfuck        new_double_pool     long_runner     no_head  
-# good_no_head     damian1  uberdriver79
-choose_model = "uberdriver79"
+choose_model = "test_model_TUNED"
 
 picture_index = 15000
 
@@ -37,8 +34,8 @@ def main():
     print(f"Using device: {device}")
 
 
-    model, model_path, conf_mat_name = initialize_model(choose_model)
-    model.load_state_dict(torch.load(model_path))
+    model = Network()
+    model.load_state_dict(torch.load(f"./models/{choose_model}.pth"))
     model.to(device)
     summary(model, (3, 32, 32))
 
@@ -90,12 +87,6 @@ def main():
     new_picture = torch.clamp(new_picture, 0, 1)
     plt.imshow(new_picture.permute(1, 2, 0))
     plt.show()
-
-
-    
-
-
-
 
 
 if __name__ == "__main__":

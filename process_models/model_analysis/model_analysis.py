@@ -1,6 +1,7 @@
 from torchvision import datasets, transforms
 from torchsummary import summary
-
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
@@ -9,13 +10,15 @@ import torch
 import tqdm
 import sys
 
+sys.path.append('./')
+from main import Network
+
+
+
 torch.manual_seed(13)
 
-sys.path.append("./read_models/init/model_init")
-from model_init import initialize_model
-sys.path.remove("./read_models/init/model_init")
 
-choose_model = "hubert2_TUNED"
+choose_model = "test_model_TUNED"
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
@@ -36,8 +39,8 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1024, shuffle = False, pin_memory=True, num_workers=2)
     test_dataset_size = len(test_dataset)
 
-    model, model_path, conf_mat_name = initialize_model(choose_model)
-    model.load_state_dict(torch.load(model_path))
+    model = Network()
+    model.load_state_dict(torch.load(f"./models/{choose_model}.pth"))
     model.to(device)
     summary(model, (3, 32, 32))
     
